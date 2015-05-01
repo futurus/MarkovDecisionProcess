@@ -1,7 +1,7 @@
 __author__ = 'vunguyen'
 
-from collections import *
 from utils import *
+from collections import *
 import random
 import time
 
@@ -19,7 +19,7 @@ def toc():
 Wall = None
 
 class GridWorld():
-    def __init__(self, grid, start=(2, 3), gamma=0.9):
+    def __init__(self, grid, start=(2, 2), gamma=0.9):
         self.start = start
         self.rows = len(grid)
         self.cols = len(grid[0])
@@ -55,14 +55,14 @@ class GridWorld():
                 (0.1, left(action)),
                 (0.1, right(action))]
 
-    def f(self, u, n, n_arg=100):
+    def f(self, u, n, n_arg=1000):
         if n < n_arg:
-            return 500
+            return 100
         else:
             return u
 
     def alpha(self, t):
-        return 60.0/(59.0 + t)
+        return 1000.0/(999.0 + t)
 
     def actions(self):
         return [(1, 0), (0, 1), (-1, 0), (0, -1)]
@@ -86,27 +86,35 @@ gworld = GridWorld([[ +1.00,  Wall, +1.00, -0.04, -0.04, +1.00],
 def qlearning(mdp, epoch=1000, epsilon=0.01):
     Q = dict([((s, a), 0) for s in mdp.states for a in mdp.actions()])
     N = dict([((s, a), 0) for s in mdp.states for a in mdp.actions()])
+    Start = dict([(s, 0) for s in mdp.states])
     R, f, alpha, gamma = mdp.reward, mdp.f, mdp.alpha, mdp.gamma
 
     t = 0
     for episode in range(epoch):
-        s = random.sample(mdp.states, 1)[0]
+        s = random.choice(tuple(mdp.states))
+        # s = mdp.start
+        Start[s] += 1
 
         while True:
+            # time.sleep(1)
             t += 1
             domain = [(s, a) for a in mdp.actions()]
+            random.shuffle(domain)
+
             a = argmax(domain, lambda el:f(Q[el], N[el]))[1]
 
             N[(s, a)] += 1
             sp = mdp.go(s, a)
 
-            Q[(s, a)] = Q[(s, a)] + alpha(t) * (R[s] + gamma * max([Q[sp, ap] for ap in mdp.actions()]) - Q[(s, a)])
+            Q[(s, a)] = (1 - alpha(t)) * Q[(s, a)] + alpha(t) * (R[s] + gamma * max([Q[sp, ap] for ap in mdp.actions()]))
+
             s = sp
 
-            if alpha(t) < epsilon * (1 - gamma)/gamma:
+            # if alpha(t) < epsilon * (1 - gamma)/gamma:
+            if t % 100 == 0:
                 break
 
-    return Q
+    return Q, N, Start, R
 
 def estimated_utility(mdp, Q):
     U = {}
@@ -130,7 +138,7 @@ def best_policy(mdp, Q):
 
 
 tic()
-Q = qlearning(gworld, epoch=10000)
-print estimated_utility(gworld, Q)
+Q, N, S, R = qlearning(gworld, epoch=10000)
+# print estimated_utility(gworld, Q)
 print_table(gworld.to_arrows(best_policy(gworld, Q)))
 toc()

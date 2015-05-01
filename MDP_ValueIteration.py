@@ -50,6 +50,17 @@ class GridWorld():
     def to_grid(self, mapping):
         return list(reversed([[mapping.get((x,y), 'Wall') for x in range(self.cols)] for y in range(self.rows)]))
 
+    def print_grid(self, mapping):
+        mapping = self.to_grid(mapping)
+        for i in range(self.rows):
+            str = ''
+            for j in range(self.cols):
+                if mapping[i][j] != 'Wall':
+                    str += round(mapping[i][j], 1).__str__() + ' '
+                else:
+                    str += mapping[i][j] + ' '
+            print str
+
     def to_arrows(self, policy):
         chars = {(1, 0):'>', (0, 1):'^', (-1, 0):'<', (0, -1):'v'}
         return self.to_grid(dict([(s, chars[a]) for (s, a) in policy.items()]))
@@ -75,7 +86,7 @@ def value_iteration(mdp, epsilon=0.001):
             U1[s] = R[s] + gamma * max([sum([p * U[s1] for (p, s1) in T(s, a)]) for a in mdp.actions()])
             delta = max(delta, abs(U1[s] - U[s]))
         if delta < epsilon*(1 - gamma)/gamma:
-            print count
+            print 'no of iterations:', count
             return U
 
 
@@ -94,14 +105,9 @@ def best_policy(mdp, U):
 
 tic()
 U = value_iteration(gworld)
-print U
+# print U
+gworld.print_grid(U)
 print_table(gworld.to_arrows(best_policy(gworld, U)))
 toc()
 
 # print gworld.to_arrows(best_policy(gworld, value_iteration(gworld)))
-
-# print gworld.reward
-# print gworld.states
-# print gworld.transition((0, 0), (1, 0))
-# print gworld.transition((0, 0), (0, 1))
-# print gworld.transition((1, 0), (0, 1))
