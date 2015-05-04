@@ -80,7 +80,7 @@ class GridWorld():
                     (0.05, left(action)),
                     (0.05, right(action))]
 
-    def f(self, u, n, n_arg=15):
+    def f(self, u, n, n_arg=25):
         if n < n_arg:
             return 1000
         else:
@@ -146,24 +146,24 @@ def qlearning(mdp, epoch=1000, epsilon=0.01):
             N[(s, a, status)] += 1
             sp = mdp.go(s, a, status)
 
-            reward = -0.1
+            reward = 0 #-0.1
 
             # change status here
             # print "i'm currently at", s, "my stat:", status, "my action is", a, "new state:", sp,
-            if (status == 0 or status == 2) and sp in mdp.bank:
-                # print "withdrawing money",
-                newstatus = status + 1  # withdraw money from the bank
-                reward = -.1
-
-            elif (status == 2 or status == 3) and sp in mdp.friend:
+            if (status == 2 or status == 3) and sp in mdp.friend:
                 # print "dropping gift off",
                 newstatus = status - 2  # drop gift off at friend
-                reward = 5.0
+                reward = 5.
+
+            elif (status == 0 or status == 2) and sp in mdp.bank:  # we prioritize giving gift to friend than going to the bank
+                # print "withdrawing money",
+                newstatus = status + 1  # withdraw money from the bank
+                reward = 1.
 
             elif status == 1 and sp in mdp.stores:
                 # print "buying gift",
                 newstatus = status + 1  # buy gift at one of the stores
-                reward = -.1
+                reward = 1.
 
             # print "getting reward", reward
 
@@ -172,7 +172,7 @@ def qlearning(mdp, epoch=1000, epsilon=0.01):
             s = sp
             status = newstatus
 
-            if t % 10000 == 0:
+            if t % 1000 == 0:
                 break
 
     return Q, N, Start, R
