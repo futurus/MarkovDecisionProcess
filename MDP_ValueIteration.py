@@ -48,18 +48,14 @@ class GridWorld():
         return [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
     def to_grid(self, mapping):
-        return list(reversed([[mapping.get((x,y), 'Wall') for x in range(self.cols)] for y in range(self.rows)]))
+        return list(reversed([[mapping.get((x,y), 0.0) for x in range(self.cols)] for y in range(self.rows)]))
 
     def print_grid(self, mapping):
         mapping = self.to_grid(mapping)
         for i in range(self.rows):
-            str = ''
             for j in range(self.cols):
-                if mapping[i][j] != 'Wall':
-                    str += round(mapping[i][j], 1).__str__() + ' '
-                else:
-                    str += mapping[i][j] + ' '
-            print str
+                print repr(round(mapping[i][j], 2)).rjust(5),
+            print
 
     def to_arrows(self, policy):
         chars = {(1, 0):'>', (0, 1):'^', (-1, 0):'<', (0, -1):'v'}
@@ -86,7 +82,7 @@ def value_iteration(mdp, epsilon=0.001):
             U1[s] = R[s] + gamma * max([sum([p * U[s1] for (p, s1) in T(s, a)]) for a in mdp.actions()])
             delta = max(delta, abs(U1[s] - U[s]))
         if delta < epsilon*(1 - gamma)/gamma:
-            print 'no of iterations:', count
+            print 'Number of iterations:', count
             return U
 
 

@@ -37,12 +37,13 @@ class GridWorld():
         # roll the dice
         rand = random.random()
         T = self.transition(action)
-        if rand < T[0][0]:
-            action = T[0][1]
-        elif rand < T[0][0] + T[1][0]:
-            action = T[1][1]
-        elif rand < T[0][0] + T[1][0] + T[2][0]:
-            action = T[2][1]
+
+        prob = 0
+        for i in range(len(T)):
+            prob += T[i][0]
+            if rand < prob:
+                action = T[i][1]
+                break
 
         state1 = (state[0] + action[0], state[1] + action[1])
         if state1 in self.states:
@@ -62,13 +63,20 @@ class GridWorld():
             return u
 
     def alpha(self, t):
-        return 1000.0/(999.0 + t)
+        return 60.0/(59.0 + t)
 
     def actions(self):
         return [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
     def to_grid(self, mapping):
-        return list(reversed([[mapping.get((x,y), 'Wall') for x in range(self.cols)] for y in range(self.rows)]))
+        return list(reversed([[mapping.get((x,y), 0.0) for x in range(self.cols)] for y in range(self.rows)]))
+
+    def print_grid(self, mapping):
+        mapping = self.to_grid(mapping)
+        for i in range(self.rows):
+            for j in range(self.cols):
+                print repr(round(mapping[i][j], 2)).rjust(5),
+            print
 
     def to_arrows(self, policy):
         chars = {(1, 0):'>', (0, 1):'^', (-1, 0):'<', (0, -1):'v'}
@@ -139,6 +147,6 @@ def best_policy(mdp, Q):
 
 tic()
 Q, N, S, R = qlearning(gworld, epoch=10000)
-# print estimated_utility(gworld, Q)
+gworld.print_grid(estimated_utility(gworld, Q))
 print_table(gworld.to_arrows(best_policy(gworld, Q)))
 toc()
