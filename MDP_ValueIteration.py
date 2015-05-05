@@ -70,9 +70,13 @@ gworld = GridWorld([[ +1.00,  Wall, +1.00, -0.04, -0.04, +1.00],
                     [ -0.04, -0.04, -0.04, -0.04, -0.04, -0.04]], gamma=0.99)
 
 def value_iteration(mdp, epsilon=0.001):
-    "Solving an MDP by value iteration. [Fig. 17.4]"
     U1 = dict([(s, 0) for s in mdp.states])
     R, T, gamma = mdp.reward, mdp.transition, mdp.gamma
+
+    # mystates = set([(0, 5), (0, 3), (2, 5), (5, 4), (4, 1)])
+    # for s in mystates:
+    #     print s, ",",
+
     count = 0
     while True:
         count += 1
@@ -81,19 +85,22 @@ def value_iteration(mdp, epsilon=0.001):
         for s in mdp.states:
             U1[s] = R[s] + gamma * max([sum([p * U[s1] for (p, s1) in T(s, a)]) for a in mdp.actions()])
             delta = max(delta, abs(U1[s] - U[s]))
+
+        # if count % 25 == 0:
+        #     print
+        #     for s in mystates:
+        #         print U1[s], ",",
+
         if delta < epsilon*(1 - gamma)/gamma:
             print 'Number of iterations:', count
             return U
 
 
 def expected_utility(a, s, U, mdp):
-    "The expected utility of doing a in state s, according to the MDP and U."
     return sum([p * U[s1] for (p, s1) in mdp.transition(s, a)])
 
 
 def best_policy(mdp, U):
-    """Given an MDP and a utility function U, determine the best policy,
-    as a mapping from state to action. (Equation 17.4)"""
     pi = {}
     for s in mdp.states:
         pi[s] = argmax(mdp.actions(), lambda a:expected_utility(a, s, U, mdp))

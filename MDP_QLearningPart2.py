@@ -33,7 +33,7 @@ class GridWorld():
         for x in range(self.cols):
             for y in range(self.rows):
                 # self.reward[(x, y)] = grid[(self.rows - 1) - y][x]
-                self.reward[(x, y)] = -0.1
+                self.reward[(x, y)] = -0.1  # unnecessary
 
                 if grid[(self.rows - 1) - y][x] is not Wall:
                     self.states.add((x, y))
@@ -87,7 +87,7 @@ class GridWorld():
             return u
 
     def alpha(self, t):
-        return 60.0/(59.0 + t)
+        return 5000.0/(4999.0 + t)
 
     def actions(self):
         return [(1, 0), (0, 1), (-1, 0), (0, -1)]
@@ -139,14 +139,13 @@ def qlearning(mdp, epoch=1000, epsilon=0.01):
             # time.sleep(0.25)
             t += 1
             domain = [(s, a, status) for a in mdp.actions()]
-            random.shuffle(domain)
+            random.shuffle(domain)  # this is simply for tie-breaking
             a = argmax(domain, lambda el:f(Q[el], N[el]))[1] # check this
 
-            # a = random.choice(tuple(domain))[1]
             N[(s, a, status)] += 1
             sp = mdp.go(s, a, status)
 
-            reward = 0 #-0.1
+            reward = -0.1
 
             # change status here
             # print "i'm currently at", s, "my stat:", status, "my action is", a, "new state:", sp,

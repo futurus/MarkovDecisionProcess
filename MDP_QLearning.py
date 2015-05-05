@@ -4,6 +4,7 @@ from utils import *
 from collections import *
 import random
 import time
+import math
 
 def tic():
     global startTime_for_tictoc
@@ -63,7 +64,7 @@ class GridWorld():
             return u
 
     def alpha(self, t):
-        return 60.0/(59.0 + t)
+        return 11000.0/(10999.0 + t)
 
     def actions(self):
         return [(1, 0), (0, 1), (-1, 0), (0, -1)]
@@ -91,11 +92,32 @@ gworld = GridWorld([[ +1.00,  Wall, +1.00, -0.04, -0.04, +1.00],
                     [ -0.04, -0.04, -0.04, -0.04, -0.04, -0.04]], gamma=0.99)
 
 
+def RMSE(mdp, U, Uv):
+    error = 0
+
+    for s in mdp.states:
+        error += (U[s] - Uv[s])**2
+
+    return math.sqrt(error/len(mdp.states))
+
+
 def qlearning(mdp, epoch=1000, epsilon=0.01):
     Q = dict([((s, a), 0) for s in mdp.states for a in mdp.actions()])
     N = dict([((s, a), 0) for s in mdp.states for a in mdp.actions()])
     Start = dict([(s, 0) for s in mdp.states])
     R, f, alpha, gamma = mdp.reward, mdp.f, mdp.alpha, mdp.gamma
+
+    Uv = {(0, 0): 92.94, (0, 1): 94.31, (0, 2): 95.55, (0, 3): 96.95, (0, 4): 98.39, (0, 5): 100.0,
+          (1, 0): 91.73, (1, 1): 00.00, (1, 2): 94.45, (1, 3): 95.59, (1, 4): 95.88, (1, 5): 00.00,
+          (2, 0): 90.53, (2, 1): 00.00, (2, 2): 93.23, (2, 3): 93.29, (2, 4): 94.54, (2, 5): 95.04,
+          (3, 0): 89.36, (3, 1): 00.00, (3, 2): 91.11, (3, 3): 93.18, (3, 4): 94.40, (3, 5): 93.87,
+          (4, 0): 88.57, (4, 1): 89.55, (4, 2): 91.81, (4, 3): 93.10, (4, 4): 00.00, (4, 5): 92.65,
+          (5, 0): 89.30, (5, 1): 90.57, (5, 2): 91.89, (5, 3): 91.79, (5, 4): 90.92, (5, 5): 93.33}
+
+    # mystates = set([(0, 5), (0, 3), (2, 5), (5, 4), (4, 1)])
+    # for s in mystates:
+    #     print s, ",",
+    # print "RMSE"
 
     t = 0
     for episode in range(epoch):
@@ -103,11 +125,17 @@ def qlearning(mdp, epoch=1000, epsilon=0.01):
         # s = mdp.start
         Start[s] += 1
 
+        # if episode % 250 == 0:
+        #     U = estimated_utility(mdp, Q)
+        #     for s in mystates:
+        #         print U[s], ",",
+        #     print RMSE(mdp, U, Uv)
+
         while True:
             # time.sleep(1)
             t += 1
             domain = [(s, a) for a in mdp.actions()]
-            random.shuffle(domain)
+            random.shuffle(domain)  # this is simply for tie-breaking
 
             a = argmax(domain, lambda el:f(Q[el], N[el]))[1]
 
@@ -149,4 +177,6 @@ tic()
 Q, N, S, R = qlearning(gworld, epoch=10000)
 gworld.print_grid(estimated_utility(gworld, Q))
 print_table(gworld.to_arrows(best_policy(gworld, Q)))
+
+print N
 toc()
